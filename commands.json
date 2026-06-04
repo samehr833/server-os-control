@@ -1,0 +1,23 @@
+{
+  "allowedCommands": [
+    "ls",
+    "dir",
+    "pwd",
+    "whoami",
+    "date",
+    "uptime",
+    "free -h",
+    "df -h",
+    "top -bn1 | head -10",
+    "docker ps",
+    "systemctl status"
+  ],
+  "blockedCommands": [
+    "rm -rf",
+    "sudo",
+    "shutdown",
+    "reboot",
+    "kill",
+    "pkill"
+  ]
+}

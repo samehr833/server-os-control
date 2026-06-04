@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>Server OS - Control Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #e8001e;
+            --red-glow: #ff0a2a;
+            --red-dim: #8b0010;
+            --red-dark: #3a0008;
+            --gold: #c9920a;
+            --gold-light: #f0b429;
+            --gold-pale: #ffe08a;
+            --black: #050507;
+            --black2: #0c0c10;
+            --black3: #141418;
+            --black4: #1c1c22;
+            --white: #f5f0e8;
+            --white-dim: rgba(245,240,232,0.7);
+            --white-faint: rgba(245,240,232,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            background: var(--black);
+            touch-action: pan-x pan-y;
+        }
+
+        /* === WALLPAPER === */
+        .desktop {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallpaper {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background: var(--black);
+            overflow: hidden;
+        }
+
+        .wallpaper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 50% 0%, rgba(232,0,30,0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 80% 80%, rgba(201,146,10,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 10% 60%, rgba(232,0,30,0.06) 0%, transparent 60%);
+        }
+
+        /* grid lines */
+        .wallpaper::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(232,0,30,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(232,0,30,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* scan line */
+        .scanline {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.08) 2px,
+                rgba(0,0,0,0.08) 4px
+            );
+        }
+
+        /* === DESKTOP ICONS === */
+        .desktop-icons {
+            position: absolute;
+            top: 18px;
+            left: 10px;
+            right: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            z-index: 1;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 14px 6px 10px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(12,12,16,0.75);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(232,0,30,0.25);
+            box-shadow: 0 0 10px rgba(232,0,30,0.06), inset 0 1px 0 rgba(245,240,232,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .desktop-icon::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(232,0,30,0.6), transparent);
+        }
+
+        .desktop-icon:active {
+            background: rgba(232,0,30,0.2);
+            border-color: var(--red-glow);
+            box-shadow: 0 0 18px rgba(232,0,30,0.35);
+            transform: scale(0.95);
+        }
+
+        .desktop-icon-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 7px;
+        }
+
+        .desktop-icon-label {
+            font-size: 10px;
+            color: var(--white-dim);
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* === TASKBAR === */
+        .taskbar {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 62px;
+            background: rgba(5,5,7,0.97);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(232,0,30,0.4);
+            box-shadow: 0 -4px 24px rgba(232,0,30,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            z-index: 100;
+            gap: 10px;
+        }
+
+        .start-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            background: linear-gradient(135deg, var(--red) 0%, #a0001a 100%);
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 0 14px rgba(232,0,30,0.5), inset 0 1px 0 rgba(255,100,100,0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid rgba(255,100,80,0.4);
+            flex-shrink: 0;
+        }
+
+        .start-button:active {
+            transform: scale(0.96);
+            box-shadow: 0 0 22px rgba(232,0,30,0.7);
+        }
+
+        .taskbar-apps {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .taskbar-apps::-webkit-scrollbar { display: none; }
+
+        .taskbar-app {
+            padding: 5px 12px;
+            background: rgba(232,0,30,0.1);
+            border: 1px solid rgba(232,0,30,0.25);
+            border-radius: 8px;
+            color: var(--white-dim);
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .taskbar-app:active {
+            background: rgba(232,0,30,0.4);
+        }
+
+        .taskbar-time {
+            color: var(--gold-light);
+            font-size: 13px;
+            font-family: 'Share Tech Mono', monospace;
+            background: rgba(201,146,10,0.08);
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(201,146,10,0.3);
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* === START MENU === */
+        .start-menu {
+            position: fixed;
+            bottom: 62px; left: 0; right: 0; top: 0;
+            background: rgba(5,5,7,0.98);
+            backdrop-filter: blur(24px);
+            z-index: 101;
+            display: none;
+            flex-direction: column;
+            animation: slideUp 0.25s cubic-bezier(0.2,0.9,0.4,1.1);
+        }
+
+        .start-menu.show { display: flex; }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .start-menu-header {
+            padding: 28px 22px 22px;
+            background: linear-gradient(160deg, rgba(232,0,30,0.25) 0%, rgba(201,146,10,0.08) 100%);
+            border-bottom: 1px solid rgba(232,0,30,0.3);
+            position: relative;
+        }
+        .start-menu-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--red), var(--gold), transparent);
+        }
+
+        .start-menu-header div:first-child {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: white;
+            text-shadow: 0 0 20px rgba(232,0,30,0.7);
+        }
+
+        .start-menu-header div:last-child {
+            font-size: 12px;
+            color: var(--gold-light);
+            margin-top: 4px;
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 2px;
+        }
+
+        .start-menu-apps {
+            flex: 1;
+            padding: 18px 14px;
+            overflow-y: auto;
+        }
+
+        .start-menu-item {
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--white-dim);
+            font-size: 15px;
+            font-weight: 600;
+            background: rgba(232,0,30,0.05);
+            border: 1px solid rgba(232,0,30,0.12);
+            margin-bottom: 8px;
+            transition: all 0.15s;
+            letter-spacing: 0.5px;
+        }
+
+        .start-menu-item:active {
+            background: rgba(232,0,30,0.25);
+            border-color: var(--red);
+            color: white;
+            box-shadow: 0 0 14px rgba(232,0,30,0.3);
+            transform: scale(0.98);
+        }
+
+        .start-menu-footer {
+            border-top: 1px solid rgba(232,0,30,0.2);
+            padding: 14px;
+        }
+
+        /* === WINDOWS === */
+        .window {
+            position: fixed;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 62px !important;
+            background: rgba(8,8,10,0.98);
+            backdrop-filter: blur(24px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 200;
+            width: 100% !important;
+            height: auto !important;
+            border-radius: 0;
+            animation: fadeIn 0.2s ease;
+            border-top: 1px solid rgba(232,0,30,0.4);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .window-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 18px;
+            background: rgba(0,0,0,0.6);
+            border-bottom: 1px solid rgba(232,0,30,0.25);
+            position: relative;
+        }
+        .window-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--red), transparent);
+        }
+
+        .window-title {
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .window-title svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .window-controls { display: flex; gap: 10px; }
+
+        .window-control {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--white-dim);
+            font-size: 18px;
+            background: rgba(232,0,30,0.08);
+            border: 1px solid rgba(232,0,30,0.2);
+            transition: all 0.15s;
+        }
+
+        .window-control.close:active {
+            background: var(--red);
+            color: white;
+            box-shadow: 0 0 14px rgba(232,0,30,0.6);
+        }
+
+        .window-content {
+            flex: 1;
+            padding: 18px;
+            overflow-y: auto;
+            color: var(--white-dim);
+            -webkit-overflow-scrolling: touch;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* === NOTIFICATION === */
+        .notification {
+            position: fixed;
+            bottom: 78px;
+            left: 12px; right: 12px;
+            background: rgba(12,12,16,0.98);
+            backdrop-filter: blur(20px);
+            border-left: 3px solid var(--red-glow);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            z-index: 300;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 24px rgba(232,0,30,0.25), 0 0 0 1px rgba(232,0,30,0.15);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar { width: 3px; height: 3px; }
+        ::-webkit-scrollbar-track { background: var(--black2); }
+        ::-webkit-scrollbar-thumb { background: var(--red-dim); border-radius: 10px; }
+
+        /* === INNER ELEMENTS === */
+        #fileGrid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        #termOut {
+            font-size: 13px;
+            font-family: 'Share Tech Mono', monospace;
+            color: #e8001e;
+        }
+        #termIn {
+            font-size: 14px;
+            padding: 12px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        button, .btn-style { touch-action: manipulation; }
+        input, textarea, button { font-size: 16px; }
+
+        /* inner buttons shared */
+        .inner-btn {
+            background: rgba(232,0,30,0.12);
+            border: 1px solid rgba(232,0,30,0.3);
+            border-radius: 10px;
+            color: var(--white);
+            padding: 11px 16px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+        }
+        .inner-btn:active {
+            background: rgba(232,0,30,0.35);
+            box-shadow: 0 0 10px rgba(232,0,30,0.4);
+        }
+
+        .inner-row {
+            padding: 12px;
+            border-bottom: 1px solid rgba(232,0,30,0.1);
+        }
+
+        /* corner accent */
+        .corner-tl {
+            position: absolute;
+            top: 8px; left: 8px;
+            width: 14px; height: 14px;
+            border-top: 2px solid var(--red);
+            border-left: 2px solid var(--red);
+            z-index: 2;
+        }
+        .corner-br {
+            position: absolute;
+            bottom: 68px; right: 8px;
+            width: 14px; height: 14px;
+            border-bottom: 2px solid var(--gold);
+            border-right: 2px solid var(--gold);
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+<div class="desktop">
+    <div class="wallpaper"></div>
+    <div class="scanline"></div>
+    <div class="corner-tl"></div>
+    <div class="corner-br"></div>
+
+    <!-- Desktop Icons -->
+    <div class="desktop-icons">
+
+        <!-- FILES -->
+        <div class="desktop-icon" data-app="explorer">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="14" width="40" height="28" rx="4" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/>
+                <path d="M4 20h40" stroke="#e8001e" stroke-width="1"/>
+                <rect x="4" y="10" width="18" height="6" rx="2" fill="#e8001e" opacity="0.7"/>
+                <path d="M14 28h20M14 34h14" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="desktop-icon-label">Files</div>
+        </div>
+
+        <!-- TERMINAL -->
+        <div class="desktop-icon" data-app="terminal">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="8" width="40" height="32" rx="4" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/>
+                <rect x="4" y="8" width="40" height="8" rx="4" fill="rgba(232,0,30,0.25)"/>
+                <circle cx="11" cy="12" r="2" fill="#e8001e"/>
+                <circle cx="19" cy="12" r="2" fill="#c9920a" opacity="0.6"/>
+                <circle cx="27" cy="12" r="2" fill="rgba(245,240,232,0.3)"/>
+                <path d="M12 24l6 4-6 4" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M24 32h10" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="desktop-icon-label">Terminal</div>
+        </div>
+
+        <!-- MONITOR -->
+        <div class="desktop-icon" data-app="stats">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="8" width="40" height="28" rx="3" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/>
+                <rect x="18" y="36" width="12" height="4" rx="1" fill="rgba(232,0,30,0.4)"/>
+                <path d="M8 24 l6-8 l5 6 l5-10 l5 8 l5-4" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <path d="M8 30 Q14 26 20 28 Q26 30 32 24 Q38 18 40 22" stroke="#c9920a" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.5"/>
+            </svg>
+            <div class="desktop-icon-label">Monitor</div>
+        </div>
+
+        <!-- PROCESSES -->
+        <div class="desktop-icon" data-app="processes">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="14" stroke="#e8001e" stroke-width="1.5" fill="rgba(232,0,30,0.08)"/>
+                <circle cx="24" cy="24" r="6" stroke="#c9920a" stroke-width="1.5" fill="rgba(201,146,10,0.1)"/>
+                <circle cx="24" cy="24" r="2" fill="#e8001e"/>
+                <path d="M24 10v4M24 34v4M10 24h4M34 24h4" stroke="#e8001e" stroke-width="2" stroke-linecap="round"/>
+                <path d="M14.1 14.1l2.8 2.8M31.1 31.1l2.8 2.8M33.9 14.1l-2.8 2.8M16.9 31.1l-2.8 2.8" stroke="#e8001e" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+            </svg>
+            <div class="desktop-icon-label">Processes</div>
+        </div>
+
+        <!-- SERVICES -->
+        <div class="desktop-icon" data-app="services">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="12" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/>
+                <rect x="8" y="22" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/>
+                <rect x="8" y="32" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/>
+                <circle cx="14" cy="16" r="2" fill="#e8001e"/>
+                <circle cx="14" cy="26" r="2" fill="#c9920a"/>
+                <circle cx="14" cy="36" r="2" fill="#e8001e" opacity="0.4"/>
+                <path d="M22 16h12M22 26h8M22 36h10" stroke="rgba(245,240,232,0.4)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="desktop-icon-label">Services</div>
+        </div>
+
+        <!-- LOGS -->
+        <div class="desktop-icon" data-app="logs">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="6" width="28" height="36" rx="3" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/>
+                <path d="M36 14l4 4v22a2 2 0 01-2 2h-2" stroke="#e8001e" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M14 16h16M14 22h16M14 28h10M14 34h12" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+                <path d="M14 16h5" stroke="#e8001e" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div class="desktop-icon-label">Logs</div>
+        </div>
+
+        <!-- NETWORK -->
+        <div class="desktop-icon" data-app="network">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="16" stroke="#e8001e" stroke-width="1.5" fill="rgba(232,0,30,0.06)"/>
+                <ellipse cx="24" cy="24" rx="7" ry="16" stroke="#e8001e" stroke-width="1" opacity="0.5"/>
+                <path d="M8 24h32" stroke="#e8001e" stroke-width="1"/>
+                <path d="M10 17h28M10 31h28" stroke="#e8001e" stroke-width="1" opacity="0.4"/>
+                <circle cx="24" cy="24" r="3" fill="#c9920a"/>
+            </svg>
+            <div class="desktop-icon-label">Network</div>
+        </div>
+
+        <!-- RESTART -->
+        <div class="desktop-icon" data-app="restart">
+            <svg class="desktop-icon-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 24a12 12 0 1 1 3.5 8.5" stroke="#e8001e" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M12 34V24h10" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <circle cx="24" cy="24" r="4" fill="rgba(232,0,30,0.3)" stroke="#c9920a" stroke-width="1.5"/>
+            </svg>
+            <div class="desktop-icon-label">Restart</div>
+        </div>
+
+    </div>
+
+    <div id="windows-container"></div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="start-button" id="startButton">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="1" width="5" height="5" rx="1" fill="white"/>
+                <rect x="8" y="1" width="5" height="5" rx="1" fill="white" opacity="0.7"/>
+                <rect x="1" y="8" width="5" height="5" rx="1" fill="white" opacity="0.7"/>
+                <rect x="8" y="8" width="5" height="5" rx="1" fill="white" opacity="0.5"/>
+            </svg>
+            START
+        </div>
+        <div class="taskbar-apps" id="taskbarApps"></div>
+        <div class="taskbar-time" id="taskbarTime">--:--</div>
+    </div>
+
+    <!-- Start Menu -->
+    <div class="start-menu" id="startMenu">
+        <div class="start-menu-header">
+            <div>Server OS</div>
+            <div id="hostname">loading...</div>
+        </div>
+        <div class="start-menu-apps">
+            <div class="start-menu-item" data-app="explorer">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="4" y="14" width="40" height="28" rx="4" fill="rgba(232,0,30,0.15)" stroke="#e8001e" stroke-width="1.5"/><rect x="4" y="10" width="18" height="6" rx="2" fill="#e8001e" opacity="0.7"/><path d="M14 28h20M14 34h14" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round"/></svg>
+                File Explorer
+            </div>
+            <div class="start-menu-item" data-app="terminal">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="4" y="8" width="40" height="32" rx="4" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/><path d="M12 24l6 4-6 4" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 32h10" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Terminal
+            </div>
+            <div class="start-menu-item" data-app="stats">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="4" y="8" width="40" height="28" rx="3" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/><path d="M8 24 l6-8 l5 6 l5-10 l5 8 l5-4" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                System Monitor
+            </div>
+            <div class="start-menu-item" data-app="processes">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="14" stroke="#e8001e" stroke-width="1.5" fill="rgba(232,0,30,0.08)"/><circle cx="24" cy="24" r="4" fill="#e8001e"/><path d="M24 10v4M24 34v4M10 24h4M34 24h4" stroke="#e8001e" stroke-width="2" stroke-linecap="round"/></svg>
+                Process Manager
+            </div>
+            <div class="start-menu-item" data-app="services">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/><rect x="8" y="22" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/><rect x="8" y="32" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/><circle cx="14" cy="16" r="2" fill="#e8001e"/><circle cx="14" cy="26" r="2" fill="#c9920a"/></svg>
+                Services
+            </div>
+            <div class="start-menu-item" data-app="logs">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="8" y="6" width="28" height="36" rx="3" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/><path d="M14 16h16M14 22h16M14 28h10M14 34h12" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/></svg>
+                Event Logs
+            </div>
+            <div class="start-menu-item" data-app="network">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="#e8001e" stroke-width="1.5" fill="rgba(232,0,30,0.06)"/><ellipse cx="24" cy="24" rx="7" ry="16" stroke="#e8001e" stroke-width="1" opacity="0.5"/><path d="M8 24h32" stroke="#e8001e" stroke-width="1"/><circle cx="24" cy="24" r="3" fill="#c9920a"/></svg>
+                Network Info
+            </div>
+        </div>
+        <div class="start-menu-footer">
+            <div class="start-menu-item" id="restartBtn" style="color:#e8001e; border-color:rgba(232,0,30,0.4);">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M12 24a12 12 0 1 1 3.5 8.5" stroke="#e8001e" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 34V24h10" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                Restart Server
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let windows = [];
+    let nextZIndex = 100;
+    let startMenuOpen = false;
+    let currentPath = '/home';
+
+    async function apiCall(endpoint, options = {}) {
+        const res = await fetch(endpoint, {
+            ...options,
+            headers: { 'Content-Type': 'application/json', ...options.headers }
+        });
+        return res.json();
+    }
+
+    function showNotification(title, message) {
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        notif.innerHTML = `<div style="font-weight:700; font-size:14px; letter-spacing:1px; margin-bottom:4px; color:white;">${title}</div><div style="font-size:12px; color:rgba(245,240,232,0.7); font-family:'Share Tech Mono',monospace;">${message}</div>`;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 2500);
+    }
+
+    function innerBtn(label, onclick) {
+        return `<button class="inner-btn" onclick="${onclick}">${label}</button>`;
+    }
+
+    function createWindow(appId, title, iconSvg, content) {
+        document.querySelectorAll('.window').forEach(w => w.remove());
+        const windowId = 'win_' + Date.now();
+        const winDiv = document.createElement('div');
+        winDiv.className = 'window';
+        winDiv.id = windowId;
+        winDiv.style.zIndex = nextZIndex++;
+        winDiv.innerHTML = `
+            <div class="window-header">
+                <div class="window-title">${iconSvg}<span>${title}</span></div>
+                <div class="window-controls">
+                    <div class="window-control close">✕</div>
+                </div>
+            </div>
+            <div class="window-content">${content}</div>
+        `;
+        document.getElementById('windows-container').appendChild(winDiv);
+        winDiv.querySelector('.close').addEventListener('click', () => {
+            winDiv.remove();
+            windows = windows.filter(w => w.id !== windowId);
+        });
+        windows.push({id:windowId, appId, title});
+        return winDiv;
+    }
+
+    // icons for windows
+    const icons = {
+        stats: `<svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="4" y="8" width="40" height="28" rx="3" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/><path d="M8 24 l6-8 l5 6 l5-10 l5 8 l5-4" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+        terminal: `<svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="4" y="8" width="40" height="32" rx="4" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/><path d="M12 24l6 4-6 4" stroke="#e8001e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 32h10" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        files: `<svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="4" y="14" width="40" height="28" rx="4" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/><rect x="4" y="10" width="18" height="6" rx="2" fill="#e8001e" opacity="0.7"/></svg>`,
+        processes: `<svg width="20" height="20" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="14" stroke="#e8001e" stroke-width="1.5" fill="rgba(232,0,30,0.08)"/><circle cx="24" cy="24" r="4" fill="#e8001e"/><path d="M24 10v4M24 34v4M10 24h4M34 24h4" stroke="#e8001e" stroke-width="2" stroke-linecap="round"/></svg>`,
+        services: `<svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/><rect x="8" y="22" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/><rect x="8" y="32" width="32" height="8" rx="2" fill="rgba(232,0,30,0.12)" stroke="#e8001e" stroke-width="1.5"/><circle cx="14" cy="16" r="2" fill="#e8001e"/></svg>`,
+        logs: `<svg width="20" height="20" viewBox="0 0 48 48" fill="none"><rect x="8" y="6" width="28" height="36" rx="3" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/><path d="M14 16h16M14 22h16M14 28h10M14 34h12" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/></svg>`,
+        network: `<svg width="20" height="20" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="#e8001e" stroke-width="1.5" fill="rgba(232,0,30,0.06)"/><ellipse cx="24" cy="24" rx="7" ry="16" stroke="#e8001e" stroke-width="1" opacity="0.5"/><path d="M8 24h32" stroke="#e8001e" stroke-width="1"/><circle cx="24" cy="24" r="3" fill="#c9920a"/></svg>`,
+    };
+
+    const rowStyle = `padding:12px; border-bottom:1px solid rgba(232,0,30,0.1);`;
+    const monoStyle = `font-family:'Share Tech Mono',monospace; font-size:13px;`;
+
+    function openStats() {
+        const content = `<div id="statsContent">
+            <div style="${rowStyle} font-size:16px; ${monoStyle}">CPU: <span id="cpuVal" style="color:#e8001e;">-</span>%</div>
+            <div style="${rowStyle} ${monoStyle}">RAM: <span id="ramVal" style="color:#c9920a;">-</span>%</div>
+            <div style="${rowStyle} ${monoStyle}">DISK: <span id="diskVal" style="color:#e8001e;">-</span>%</div>
+            <div style="${rowStyle} ${monoStyle}">UPTIME: <span id="uptimeVal" style="color:#f0b429;">-</span></div>
+            <div style="${monoStyle} padding:12px;">HOST: <span id="hostVal" style="color:rgba(245,240,232,0.7);">-</span></div>
+        </div>`;
+        createWindow('stats', 'SYSTEM MONITOR', icons.stats, content);
+        const load = async () => {
+            try {
+                const d = await apiCall('/api/stats');
+                document.getElementById('cpuVal') && (document.getElementById('cpuVal').innerText = d.cpu?.usage || '0');
+                document.getElementById('ramVal') && (document.getElementById('ramVal').innerText = d.ram?.percent || '0');
+                document.getElementById('diskVal') && (document.getElementById('diskVal').innerText = d.disk?.percent || '0');
+                const h = Math.floor((d.uptime||0)/3600), m = Math.floor(((d.uptime||0)%3600)/60);
+                document.getElementById('uptimeVal') && (document.getElementById('uptimeVal').innerText = h+'h '+m+'m');
+                document.getElementById('hostVal') && (document.getElementById('hostVal').innerText = d.hostname || '-');
+            } catch(e) {}
+        };
+        load();
+        const iv = setInterval(() => { if(document.querySelector('.window:has(#statsContent)')) load(); else clearInterval(iv); }, 3000);
+    }
+
+    function openTerminal() {
+        const content = `<div style="display:flex; flex-direction:column; height:100%;">
+            <div id="termOut" style="flex:1; background:#050507; padding:14px; overflow:auto; font-family:'Share Tech Mono',monospace; font-size:13px; border-radius:10px; margin-bottom:10px; border:1px solid rgba(232,0,30,0.2);">
+                <div style="color:#e8001e;">// Terminal Ready</div>
+                <div style="color:rgba(232,0,30,0.4);">───────────────</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span style="color:#c9920a; font-size:16px; font-family:'Share Tech Mono',monospace;">$</span>
+                <input id="termIn" style="flex:1; background:#050507; border:1px solid rgba(232,0,30,0.3); color:white; padding:12px; border-radius:10px; font-size:14px; font-family:'Share Tech Mono',monospace;" placeholder="Type command...">
+                <button onclick="clearTerminal()" class="inner-btn" style="padding:11px 14px;">CLR</button>
+            </div>
+        </div>`;
+        createWindow('terminal', 'TERMINAL', icons.terminal, content);
+        setTimeout(async () => {
+            const inp = document.getElementById('termIn');
+            if(!inp) return;
+            inp.focus();
+            inp.onkeypress = async (e) => {
+                if(e.key === 'Enter') {
+                    const cmd = inp.value;
+                    if(!cmd) return;
+                    const out = document.getElementById('termOut');
+                    out.innerHTML += `<div style="color:#c9920a; margin:5px 0;">$ ${cmd}</div>`;
+                    inp.value = ''; inp.disabled = true;
+                    const res = await apiCall('/api/exec', {method:'POST', body:JSON.stringify({command:cmd})});
+                    if(res.output) out.innerHTML += `<div style="white-space:pre-wrap; margin:5px 0; color:rgba(245,240,232,0.8);">${escapeHtml(res.output)}</div>`;
+                    out.innerHTML += `<div style="color:rgba(232,0,30,0.3); margin:5px 0;">───</div>`;
+                    out.scrollTop = out.scrollHeight;
+                    inp.disabled = false; inp.focus();
+                }
+            };
+        }, 100);
+    }
+    window.clearTerminal = function() {
+        const out = document.getElementById('termOut');
+        if(out) out.innerHTML = '<div style="color:#e8001e;">// Terminal Ready</div><div style="color:rgba(232,0,30,0.4);">───────────────</div>';
+    };
+
+    async function openFileExplorer() {
+        const content = `<div style="display:flex; flex-direction:column; height:100%;">
+            <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+                <span id="curPath" style="background:#050507; border:1px solid rgba(232,0,30,0.2); padding:9px 12px; border-radius:8px; font-size:11px; font-family:'Share Tech Mono',monospace; color:#c9920a; word-break:break-all;">/home</span>
+                <button onclick="refreshDir()" class="inner-btn" style="padding:9px 12px;">↺</button>
+                <button onclick="newFolder()" class="inner-btn" style="padding:9px 12px;">+ Folder</button>
+            </div>
+            <div id="fileGrid" style="flex:1; overflow:auto; display:grid; grid-template-columns:repeat(2,1fr); gap:12px;"></div>
+        </div>`;
+        createWindow('files', 'FILE EXPLORER', icons.files, content);
+        await loadDir('/home');
+    }
+
+    async function loadDir(path) {
+        currentPath = path;
+        const pathSpan = document.getElementById('curPath');
+        const grid = document.getElementById('fileGrid');
+        if(pathSpan) pathSpan.innerText = path;
+        if(!grid) return;
+        grid.innerHTML = `<div style="text-align:center; padding:20px; font-family:'Share Tech Mono',monospace; color:rgba(232,0,30,0.5);">Loading...</div>`;
+        try {
+            const data = await apiCall(`/api/listdir?path=${encodeURIComponent(path)}`);
+            if(data.error) { grid.innerHTML = `<div style="text-align:center; color:#e8001e; font-family:'Share Tech Mono',monospace;">ERR: ${data.error}</div>`; return; }
+            if(!data.items || !data.items.length) { grid.innerHTML = '<div style="text-align:center; color:rgba(245,240,232,0.4); font-family:Share Tech Mono,monospace;">Empty</div>'; return; }
+            grid.innerHTML = '';
+            for(const item of data.items) {
+                const div = document.createElement('div');
+                div.style.cssText = 'text-align:center; padding:14px; border-radius:12px; background:rgba(232,0,30,0.06); border:1px solid rgba(232,0,30,0.18); cursor:pointer;';
+                div.onclick = () => item.isDirectory ? loadDir(item.path) : openFileReader(item.path);
+                const svgIcon = item.isDirectory
+                    ? `<svg width="38" height="38" viewBox="0 0 48 48" fill="none"><rect x="4" y="14" width="40" height="28" rx="4" fill="rgba(201,146,10,0.15)" stroke="#c9920a" stroke-width="1.5"/><rect x="4" y="10" width="18" height="6" rx="2" fill="#c9920a" opacity="0.7"/></svg>`
+                    : `<svg width="38" height="38" viewBox="0 0 48 48" fill="none"><rect x="8" y="6" width="28" height="36" rx="3" fill="rgba(232,0,30,0.08)" stroke="#e8001e" stroke-width="1.5"/><path d="M14 18h16M14 24h16M14 30h10" stroke="#c9920a" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+                div.innerHTML = `${svgIcon}<div style="font-size:11px; margin-top:7px; word-break:break-word; color:rgba(245,240,232,0.7); font-family:'Share Tech Mono',monospace;">${escapeHtml(item.name.substring(0,20))}</div>`;
+                grid.appendChild(div);
+            }
+        } catch(e) { grid.innerHTML = '<div style="color:#e8001e; font-family:Share Tech Mono,monospace;">ERR</div>'; }
+    }
+
+    async function openFileReader(filePath) {
+        const data = await apiCall(`/api/readfile?path=${encodeURIComponent(filePath)}`);
+        if(data.error) { showNotification('ERROR', data.error); return; }
+        const name = filePath.split('/').pop();
+        const content = `<div style="height:100%; display:flex; flex-direction:column;">
+            <div style="background:#050507; border:1px solid rgba(232,0,30,0.2); padding:10px 12px; border-radius:8px; margin-bottom:10px; font-size:11px; word-break:break-all; font-family:'Share Tech Mono',monospace; color:#c9920a;">${escapeHtml(filePath)}</div>
+            <textarea id="fileEdit" style="flex:1; background:#050507; border:1px solid rgba(232,0,30,0.2); color:#f0b429; padding:12px; font-family:'Share Tech Mono',monospace; font-size:13px; border-radius:10px; resize:none;">${escapeHtml(data.content||'')}</textarea>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <button onclick="saveCurrentFile()" class="inner-btn" style="flex:1; background:rgba(232,0,30,0.2); border-color:rgba(232,0,30,0.5);">SAVE</button>
+                <button onclick="closeCurrentWindow()" class="inner-btn" style="flex:1;">CANCEL</button>
+            </div>
+        </div>`;
+        createWindow('editor', name, icons.files, content);
+        window.currentEditPath = filePath;
+    }
+
+    window.saveCurrentFile = async () => {
+        const content = document.getElementById('fileEdit')?.value;
+        if(!content || !window.currentEditPath) return;
+        const res = await apiCall('/api/writefile', {method:'POST', body:JSON.stringify({path:window.currentEditPath, content})});
+        showNotification(res.success ? 'SAVED' : 'FAILED', '');
+    };
+    window.closeCurrentWindow = () => { const w = document.querySelector('.window'); if(w) w.remove(); };
+    window.refreshDir = () => loadDir(currentPath);
+    window.newFolder = async () => {
+        const name = prompt('Folder name:');
+        if(!name) return;
+        const res = await apiCall('/api/mkdir', {method:'POST', body:JSON.stringify({path:`${currentPath}/${name}`})});
+        if(res.success) { showNotification('CREATED', 'Folder created'); loadDir(currentPath); }
+        else showNotification('FAILED', 'Could not create folder');
+    };
+
+    async function openProcesses() {
+        const content = `<div><button onclick="loadProcs()" class="inner-btn" style="width:100%; margin-bottom:14px;">↺ REFRESH</button><div id="procsList"></div></div>`;
+        createWindow('processes', 'PROCESS MANAGER', icons.processes, content);
+        await loadProcs();
+    }
+    async function loadProcs() {
+        const cont = document.getElementById('procsList');
+        if(!cont) return;
+        const data = await apiCall('/api/processes');
+        if(data.processes) {
+            cont.innerHTML = data.processes.map(p => `
+                <div style="${rowStyle}">
+                    <div style="font-family:'Share Tech Mono',monospace; font-size:12px; color:#c9920a;">PID <strong style="color:white;">${p.pid}</strong> | ${p.user}</div>
+                    <div style="font-size:12px; font-family:'Share Tech Mono',monospace; color:rgba(245,240,232,0.5); margin:4px 0;">CPU ${p.cpu}% / MEM ${p.mem}%</div>
+                    <div style="font-size:10px; color:#e8001e; font-family:'Share Tech Mono',monospace; margin:4px 0;">${(p.command||'').substring(0,45)}</div>
+                    <button onclick="killProc(${p.pid})" class="inner-btn" style="background:rgba(232,0,30,0.25); border-color:rgba(232,0,30,0.5); margin-top:8px; font-size:12px; padding:8px 14px;">✕ KILL</button>
+                </div>`).join('');
+        }
+    }
+    window.killProc = async (pid) => { if(confirm(`Kill process ${pid}?`)) { await apiCall(`/api/kill/${pid}`,{method:'POST'}); loadProcs(); } };
+    window.loadProcs = loadProcs;
+
+    async function openServices() {
+        const content = `<div><button onclick="loadServs()" class="inner-btn" style="width:100%; margin-bottom:14px;">↺ REFRESH</button><div id="servsList"></div></div>`;
+        createWindow('services', 'SERVICES', icons.services, content);
+        await loadServs();
+    }
+    async function loadServs() {
+        const cont = document.getElementById('servsList');
+        if(!cont) return;
+        const data = await apiCall('/api/services');
+        if(data.services) {
+            cont.innerHTML = data.services.map(s => `
+                <div style="${rowStyle} margin-bottom:8px;">
+                    <div style="font-family:'Share Tech Mono',monospace; font-size:13px; color:white; margin-bottom:8px;">
+                        <strong>${s.name}</strong>
+                        <span style="color:${s.active==='active'?'#23a55a':'#e8001e'}; margin-left:8px;">${s.active==='active'?'● ACTIVE':'● DOWN'}</span>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="ctrlServ('${s.name}','start')" class="inner-btn" style="background:rgba(35,165,90,0.15); border-color:rgba(35,165,90,0.4); color:#23a55a; flex:1; font-size:12px; padding:9px;">START</button>
+                        <button onclick="ctrlServ('${s.name}','stop')" class="inner-btn" style="flex:1; font-size:12px; padding:9px;">STOP</button>
+                        <button onclick="ctrlServ('${s.name}','restart')" class="inner-btn" style="background:rgba(201,146,10,0.12); border-color:rgba(201,146,10,0.4); color:#f0b429; flex:1; font-size:12px; padding:9px;">RESTART</button>
+                    </div>
+                </div>`).join('');
+        }
+    }
+    window.ctrlServ = async (name,action) => { await apiCall(`/api/service/${action}/${name}`,{method:'POST'}); loadServs(); };
+    window.loadServs = loadServs;
+
+    async function openLogs() {
+        const content = `<div><button onclick="loadLogsList()" class="inner-btn" style="width:100%; margin-bottom:14px;">↺ REFRESH</button><div id="logsList" style="background:#050507; border:1px solid rgba(232,0,30,0.2); padding:12px; border-radius:10px; max-height:400px; overflow:auto; font-family:'Share Tech Mono',monospace; font-size:11px;"></div></div>`;
+        createWindow('logs', 'EVENT LOGS', icons.logs, content);
+        await loadLogsList();
+    }
+    async function loadLogsList() {
+        const cont = document.getElementById('logsList');
+        if(!cont) return;
+        const data = await apiCall('/api/logs');
+        if(data.logs && data.logs.length) cont.innerHTML = data.logs.map(l => `<div style="padding:6px; border-bottom:1px solid rgba(232,0,30,0.08); color:rgba(245,240,232,0.7);">${escapeHtml(l)}</div>`).join('');
+        else cont.innerHTML = '<div style="padding:12px; color:rgba(245,240,232,0.4);">No logs available</div>';
+    }
+    window.loadLogsList = loadLogsList;
+
+    async function openNetwork() {
+        const content = `<div><button onclick="loadNet()" class="inner-btn" style="width:100%; margin-bottom:14px;">↺ REFRESH</button><div id="netList"></div></div>`;
+        createWindow('network', 'NETWORK INFO', icons.network, content);
+        await loadNet();
+    }
+    async function loadNet() {
+        const cont = document.getElementById('netList');
+        if(!cont) return;
+        const data = await apiCall('/api/network');
+        if(data.interfaces) {
+            let html = '';
+            for(const [name,addrs] of Object.entries(data.interfaces)) {
+                html += `<div style="background:#050507; border:1px solid rgba(232,0,30,0.2); padding:12px; border-radius:10px; margin-bottom:10px;">
+                    <strong style="font-family:'Share Tech Mono',monospace; font-size:13px; color:#c9920a;">${name}</strong><br>`;
+                addrs.forEach(a => { html += `<span style="color:rgba(245,240,232,0.7); font-size:11px; font-family:'Share Tech Mono',monospace;">${a.family}: ${a.address}</span><br>`; });
+                html += `</div>`;
+            }
+            cont.innerHTML = html;
+        }
+    }
+    window.loadNet = loadNet;
+
+    function openApp(app) {
+        switch(app) {
+            case 'explorer': openFileExplorer(); break;
+            case 'terminal': openTerminal(); break;
+            case 'stats': openStats(); break;
+            case 'processes': openProcesses(); break;
+            case 'services': openServices(); break;
+            case 'logs': openLogs(); break;
+            case 'network': openNetwork(); break;
+            case 'restart': triggerRestart(); break;
+        }
+    }
+
+    async function triggerRestart() {
+        if(confirm('Restart server?')) {
+            await apiCall('/api/restart', {method:'POST'});
+            showNotification('RESTARTING', 'Server is restarting...');
+            setTimeout(() => location.reload(), 2000);
+        }
+    }
+
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+        icon.addEventListener('click', () => openApp(icon.getAttribute('data-app')));
+    });
+    document.querySelectorAll('.start-menu-item[data-app]').forEach(item => {
+        item.addEventListener('click', () => {
+            openApp(item.getAttribute('data-app'));
+            document.getElementById('startMenu').classList.remove('show');
+            startMenuOpen = false;
+        });
+    });
+
+    document.getElementById('restartBtn')?.addEventListener('click', triggerRestart);
+
+    document.getElementById('startButton').onclick = () => {
+        const menu = document.getElementById('startMenu');
+        startMenuOpen = !startMenuOpen;
+        menu.classList.toggle('show', startMenuOpen);
+    };
+    document.addEventListener('click', (e) => {
+        if(!e.target.closest('#startButton') && !e.target.closest('.start-menu')) {
+            document.getElementById('startMenu').classList.remove('show');
+            startMenuOpen = false;
+        }
+    });
+
+    function updateTime() {
+        const now = new Date();
+        const time = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:false});
+        document.getElementById('taskbarTime').innerHTML = time;
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    async function loadHost() {
+        try {
+            const d = await apiCall('/api/stats');
+            document.getElementById('hostname').innerHTML = d.hostname || 'server';
+        } catch(e) {}
+    }
+    loadHost();
+
+    function escapeHtml(str) {
+        if(!str) return '';
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+    }
+</script>
+</body>
+</html>
