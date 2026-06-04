@@ -10,7 +10,7 @@ A cyberpunk-styled mobile web interface to control your Linux server remotely
 > A cyberpunk-styled mobile web interface to control your Linux server remotely
 ## 📸 Screenshots
 
-![Server OS Desktop](screenshots/top1.png)
+![Server OS Desktop](https://i.ibb.co/n8g90XQk/top1.png)
 ## ✨ Features
 
 - 📊 **System Monitor** - Real-time CPU, RAM, Disk usage
