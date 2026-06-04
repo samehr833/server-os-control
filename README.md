@@ -8,7 +8,9 @@ A cyberpunk-styled mobile web interface to control your Linux server remotely
 ![Platform](https://img.shields.io/badge/platform-Linux-blue)
 
 > A cyberpunk-styled mobile web interface to control your Linux server remotely
+## 📸 Screenshots
 
+![Server OS Desktop](screenshots/top1.png)
 ## ✨ Features
 
 - 📊 **System Monitor** - Real-time CPU, RAM, Disk usage
